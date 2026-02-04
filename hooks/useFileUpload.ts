@@ -5,7 +5,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useIrys } from "./useIrys";
 import { useEncryption } from "./useEncryption";
 import { saveFile } from "@/lib/storage";
-import { generateId, getArweaveUrl } from "@/lib/utils";
 import type { FileMetadata, UploadProgress } from "@/types";
 
 interface UploadOptions {
@@ -117,29 +116,25 @@ export function useFileUpload(): UseFileUploadReturn {
         setProgress({
           status: "confirming",
           progress: 80,
-          message: "Confirming transaction...",
+          message: "Saving to database...",
           txId: receipt.id,
         });
 
-        // Create file metadata
-        const fileMetadata: FileMetadata = {
-          id: generateId(),
+        // Save to database via API
+        const savedFile = await saveFile(walletAddress, {
           name: file.name,
           size: file.size,
-          type: file.type,
+          mimeType: file.type || "application/octet-stream",
+          arweaveTxId: receipt.id,
+          irysReceiptId: receipt.id,
           encrypted: options.encrypt || false,
-          arweaveId: receipt.id,
-          uploadedAt: new Date().toISOString(),
-          owner: walletAddress,
-          tags: {
-            ...options.tags,
-            ...(encryptionKey && { encryptionKey }),
-            ...(encryptionIv && { encryptionIv }),
-          },
-        };
+          encryptionKey,
+          encryptionIv,
+        });
 
-        // Save to local storage
-        saveFile(walletAddress, fileMetadata);
+        if (!savedFile) {
+          throw new Error("Failed to save file to database");
+        }
 
         setProgress({
           status: "complete",
@@ -148,7 +143,7 @@ export function useFileUpload(): UseFileUploadReturn {
           txId: receipt.id,
         });
 
-        return fileMetadata;
+        return savedFile;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Upload failed";
         setProgress({

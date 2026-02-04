@@ -18,6 +18,7 @@ export interface UploadedFile extends FileMetadata {
 export interface ShareLink {
   id: string;
   fileId: string;
+  accessKey?: string;
   expiresAt?: string;
   accessCount: number;
   maxAccess?: number;

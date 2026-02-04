@@ -20,17 +20,25 @@ export default function DashboardPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<string | null>(null);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     if (!publicKey) return;
 
     setIsLoading(true);
     const walletAddress = publicKey.toBase58();
-    const storedFiles = getStoredFiles(walletAddress);
-    const storageStats = getStorageStats(walletAddress);
 
-    setFiles(storedFiles);
-    setStats(storageStats);
-    setIsLoading(false);
+    try {
+      const [storedFiles, storageStats] = await Promise.all([
+        getStoredFiles(walletAddress),
+        getStorageStats(walletAddress),
+      ]);
+
+      setFiles(storedFiles);
+      setStats(storageStats);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [publicKey]);
 
   useEffect(() => {
@@ -50,11 +58,11 @@ export default function DashboardPage() {
     setDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!publicKey || !fileToDelete) return;
-    deleteFile(publicKey.toBase58(), fileToDelete);
+    await deleteFile(publicKey.toBase58(), fileToDelete);
     setFileToDelete(null);
-    loadData();
+    await loadData();
   };
 
   if (!connected) {

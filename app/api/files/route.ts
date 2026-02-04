@@ -1,58 +1,106 @@
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
-// This API route is for future database integration
-// Currently, file metadata is stored in localStorage on the client
-
+// Get all files for a wallet
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const wallet = searchParams.get("wallet");
-
-  if (!wallet) {
-    return NextResponse.json(
-      { error: "Wallet address required" },
-      { status: 400 }
-    );
-  }
-
-  // In MVP, return empty array as data is in localStorage
-  // Future: Query database for files owned by wallet
-  return NextResponse.json({ files: [], message: "Use localStorage for MVP" });
-}
-
-export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const searchParams = request.nextUrl.searchParams;
+    const walletAddress = searchParams.get("wallet");
 
-    // Validate required fields
-    const { name, size, type, arweaveId, owner, encrypted } = body;
-
-    if (!name || !arweaveId || !owner) {
+    if (!walletAddress) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Wallet address required" },
         { status: 400 }
       );
     }
 
-    // In MVP, file metadata is stored in localStorage
-    // Future: Save to database
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { walletAddress },
+      include: {
+        files: {
+          orderBy: { uploadedAt: "desc" },
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ files: [] });
+    }
+
+    // Convert BigInt to number for JSON serialization
+    const files = user.files.map((file) => ({
+      ...file,
+      size: Number(file.size),
+    }));
+
+    return NextResponse.json({ files });
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// Create a new file record
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      name,
+      size,
+      mimeType,
+      arweaveTxId,
+      irysReceiptId,
+      encrypted,
+      encryptionKey,
+      encryptionIv,
+      walletAddress,
+    } = body;
+
+    if (!name || !arweaveTxId || !walletAddress) {
+      return NextResponse.json(
+        { error: "Missing required fields: name, arweaveTxId, walletAddress" },
+        { status: 400 }
+      );
+    }
+
+    // Find or create user
+    const user = await prisma.user.upsert({
+      where: { walletAddress },
+      update: {},
+      create: { walletAddress },
+    });
+
+    // Create file record
+    const file = await prisma.file.create({
+      data: {
+        name,
+        size: BigInt(size || 0),
+        mimeType: mimeType || "application/octet-stream",
+        arweaveTxId,
+        irysReceiptId,
+        encrypted: encrypted || false,
+        encryptionKey: encryptionKey || null,
+        encryptionIv: encryptionIv || null,
+        userId: user.id,
+      },
+    });
+
     return NextResponse.json({
       success: true,
-      message: "File metadata received. Store in localStorage for MVP.",
       file: {
-        id: crypto.randomUUID(),
-        name,
-        size,
-        type,
-        arweaveId,
-        owner,
-        encrypted,
-        uploadedAt: new Date().toISOString(),
+        ...file,
+        size: Number(file.size),
       },
     });
   } catch (error) {
+    console.error("Error creating file:", error);
     return NextResponse.json(
-      { error: "Invalid request body" },
-      { status: 400 }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
 }

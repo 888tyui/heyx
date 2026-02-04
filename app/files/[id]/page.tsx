@@ -10,7 +10,6 @@ import {
   formatBytes,
   formatDateTime,
   getArweaveUrl,
-  generateId,
   truncateAddress,
 } from "@/lib/utils";
 import {
@@ -41,19 +40,25 @@ export default function FileDetailPage() {
 
   const fileId = params.id as string;
 
-  const loadFile = useCallback(() => {
+  const loadFile = useCallback(async () => {
     if (!publicKey) return;
 
     setIsLoading(true);
     const walletAddress = publicKey.toBase58();
-    const fileData = getFileById(walletAddress, fileId);
-    const fileShares = getShareLinks(walletAddress).filter(
-      (s) => s.fileId === fileId
-    );
 
-    setFile(fileData);
-    setShares(fileShares);
-    setIsLoading(false);
+    try {
+      const [fileData, fileShares] = await Promise.all([
+        getFileById(walletAddress, fileId),
+        getShareLinks(walletAddress, fileId),
+      ]);
+
+      setFile(fileData);
+      setShares(fileShares);
+    } catch (error) {
+      console.error("Error loading file:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [publicKey, fileId]);
 
   useEffect(() => {
@@ -73,23 +78,16 @@ export default function FileDetailPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const handleCreateShare = () => {
+  const handleCreateShare = async () => {
     if (!publicKey || !file) return;
 
-    const shareLink: ShareLink = {
-      id: generateId(),
-      fileId: file.id,
-      accessCount: 0,
-      createdAt: new Date().toISOString(),
-    };
-
-    createShareLink(publicKey.toBase58(), shareLink);
-    loadFile();
+    await createShareLink(publicKey.toBase58(), file.id);
+    await loadFile();
   };
 
-  const getShareUrl = (shareId: string) => {
+  const getShareUrl = (share: ShareLink) => {
     if (typeof window !== "undefined") {
-      return `${window.location.origin}/share/${shareId}`;
+      return `${window.location.origin}/share/${share.accessKey || share.id}`;
     }
     return "";
   };
@@ -343,11 +341,11 @@ export default function FileDetailPage() {
                   >
                     <input
                       readOnly
-                      value={getShareUrl(share.id)}
+                      value={getShareUrl(share)}
                       className="flex-1 bg-transparent text-sm text-white font-mono focus:outline-none"
                     />
                     <button
-                      onClick={() => handleCopy(getShareUrl(share.id), share.id)}
+                      onClick={() => handleCopy(getShareUrl(share), share.id)}
                       className="w-8 h-8 flex items-center justify-center text-white/30 hover:text-white transition-colors duration-200"
                     >
                       {copied === share.id ? (

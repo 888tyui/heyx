@@ -33,7 +33,9 @@ model File {
   irysReceiptId String?
 
   // Encryption
-  encrypted    Boolean  @default(false)
+  encrypted     Boolean  @default(false)
+  encryptionKey String?
+  encryptionIv  String?
 
   // Timestamps
   uploadedAt   DateTime @default(now())

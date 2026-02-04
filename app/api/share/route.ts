@@ -1,81 +1,122 @@
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
-// This API route is for future database integration
-// Currently, share links are stored in localStorage on the client
-
+// Get share link by access key (public endpoint for accessing shared files)
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const shareId = searchParams.get("id");
-
-  if (!shareId) {
-    return NextResponse.json(
-      { error: "Share ID required" },
-      { status: 400 }
-    );
-  }
-
-  // In MVP, share links are in localStorage
-  // Future: Query database for share link
-  return NextResponse.json({
-    share: null,
-    message: "Use localStorage for MVP. Share link not found in server.",
-  });
-}
-
-export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const searchParams = request.nextUrl.searchParams;
+    const accessKey = searchParams.get("key");
 
-    const { fileId, owner, expiresAt, maxAccess, password } = body;
-
-    if (!fileId || !owner) {
+    if (!accessKey) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Access key required" },
         { status: 400 }
       );
     }
 
-    // Generate share link
-    const shareId = crypto.randomUUID();
+    const shareLink = await prisma.shareLink.findUnique({
+      where: { accessKey },
+      include: {
+        file: true,
+      },
+    });
 
-    // In MVP, save to localStorage on client
-    // Future: Save to database
+    if (!shareLink) {
+      return NextResponse.json(
+        { error: "Share link not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if expired
+    if (shareLink.expiresAt && new Date() > shareLink.expiresAt) {
+      return NextResponse.json(
+        { error: "Share link has expired" },
+        { status: 410 }
+      );
+    }
+
+    // Check if max downloads reached
+    if (shareLink.maxDownloads && shareLink.downloadCount >= shareLink.maxDownloads) {
+      return NextResponse.json(
+        { error: "Share link has reached maximum downloads" },
+        { status: 410 }
+      );
+    }
+
+    // Increment download count
+    await prisma.shareLink.update({
+      where: { id: shareLink.id },
+      data: { downloadCount: { increment: 1 } },
+    });
+
     return NextResponse.json({
-      success: true,
       share: {
-        id: shareId,
-        fileId,
-        owner,
-        expiresAt,
-        maxAccess,
-        hasPassword: !!password,
-        accessCount: 0,
-        createdAt: new Date().toISOString(),
+        ...shareLink,
+        file: {
+          ...shareLink.file,
+          size: Number(shareLink.file.size),
+        },
       },
     });
   } catch (error) {
+    console.error("Error fetching share link:", error);
     return NextResponse.json(
-      { error: "Invalid request body" },
-      { status: 400 }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
 }
 
-export async function DELETE(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const shareId = searchParams.get("id");
+// Create a new share link
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { fileId, walletAddress, expiresAt, maxDownloads, password } = body;
 
-  if (!shareId) {
+    if (!fileId || !walletAddress) {
+      return NextResponse.json(
+        { error: "Missing required fields: fileId, walletAddress" },
+        { status: 400 }
+      );
+    }
+
+    // Verify file ownership
+    const file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+        user: { walletAddress },
+      },
+      include: { user: true },
+    });
+
+    if (!file) {
+      return NextResponse.json(
+        { error: "File not found or unauthorized" },
+        { status: 404 }
+      );
+    }
+
+    // Create share link
+    const shareLink = await prisma.shareLink.create({
+      data: {
+        fileId,
+        createdById: file.user.id,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        maxDownloads: maxDownloads || null,
+        passwordHash: password || null, // TODO: Hash password properly
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      share: shareLink,
+    });
+  } catch (error) {
+    console.error("Error creating share link:", error);
     return NextResponse.json(
-      { error: "Share ID required" },
-      { status: 400 }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-
-  // In MVP, deletion happens in localStorage
-  // Future: Delete from database
-  return NextResponse.json({
-    success: true,
-    message: "Share link deletion should be handled in localStorage for MVP",
-  });
 }
