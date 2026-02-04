@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "python3", "gcc", "gnumake", "libudev-zero", "pkg-config", "libusb1"]
+nixPkgs = ["nodejs_22", "python3", "gcc", "gnumake", "pkg-config", "systemd"]
 
 [phases.install]
-cmds = ["npm install --legacy-peer-deps"]
+cmds = ["npm install --legacy-peer-deps --ignore-scripts", "npm rebuild --legacy-peer-deps 2>/dev/null || true"]
 
 [phases.build]
 cmds = ["npm run build"]
