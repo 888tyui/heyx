@@ -44,7 +44,10 @@ export async function getIrysBalance(irys: WebIrys): Promise<number> {
 }
 
 export async function fundIrys(irys: WebIrys, amount: number): Promise<string> {
-  const fundTx = await irys.fund(irys.utils.toAtomic(amount));
+  // Convert to atomic units and ensure it's an integer
+  const atomicAmount = irys.utils.toAtomic(amount);
+  const integerAmount = Math.ceil(atomicAmount.toNumber());
+  const fundTx = await irys.fund(integerAmount);
   return fundTx.id;
 }
 
