@@ -1,0 +1,73 @@
+// Helix Database Schema
+// Decentralized permanent storage platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model - linked to Solana wallet
+model User {
+  id            String   @id @default(cuid())
+  walletAddress String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  files      File[]
+  shareLinks ShareLink[]
+
+  @@index([walletAddress])
+}
+
+// File metadata model
+model File {
+  id           String   @id @default(cuid())
+  name         String
+  size         BigInt
+  mimeType     String
+  arweaveTxId  String   @unique
+  irysReceiptId String?
+
+  // Encryption
+  encrypted    Boolean  @default(false)
+
+  // Timestamps
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shareLinks   ShareLink[]
+
+  @@index([userId])
+  @@index([arweaveTxId])
+}
+
+// Share link model for file sharing
+model ShareLink {
+  id            String    @id @default(cuid())
+  accessKey     String    @unique @default(cuid())
+
+  // Optional restrictions
+  expiresAt     DateTime?
+  maxDownloads  Int?
+  downloadCount Int       @default(0)
+
+  // Optional password protection
+  passwordHash  String?
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  fileId        String
+  file          File      @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([accessKey])
+  @@index([fileId])
+}
