@@ -5,7 +5,7 @@ nixPkgs = ["nodejs_22", "python3", "gcc", "gnumake", "pkg-config", "systemd"]
 cmds = ["npm install --legacy-peer-deps --ignore-scripts", "npm rebuild --legacy-peer-deps 2>/dev/null || true"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["npm run build", "npx prisma db push"]
 
 [start]
-cmd = "npx prisma db push && npm run start"
+cmd = "npm run start"
