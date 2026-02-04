@@ -20,7 +20,7 @@ interface UseFileUploadReturn {
 
 export function useFileUpload(): UseFileUploadReturn {
   const { publicKey } = useWallet();
-  const { irys, connect } = useIrys();
+  const { irys, connect, checkAndFund } = useIrys();
   const { encrypt } = useEncryption();
 
   const [progress, setProgress] = useState<UploadProgress>({
@@ -104,10 +104,22 @@ export function useFileUpload(): UseFileUploadReturn {
           });
         }
 
+        // Check balance and fund if needed
+        setProgress({
+          status: "uploading",
+          progress: 40,
+          message: "Checking Irys balance...",
+        });
+
+        const funded = await checkAndFund(dataToUpload.length);
+        if (!funded) {
+          throw new Error("Failed to fund Irys node. Please try again.");
+        }
+
         // Upload to Irys
         setProgress({
           status: "uploading",
-          progress: 50,
+          progress: 60,
           message: "Uploading to Arweave via Irys...",
         });
 
