@@ -3,18 +3,32 @@ import type { IrysConfig } from "@/types";
 
 let irysInstance: WebIrys | null = null;
 
+// Get custom RPC URL or default
+function getRpcUrl(): string {
+  const customRpc = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
+  if (customRpc) return customRpc;
+
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
+  if (network === "devnet") {
+    return "https://api.devnet.solana.com";
+  }
+  return "https://api.mainnet-beta.solana.com";
+}
+
 export async function getIrys(wallet: { publicKey: { toBase58(): string }; signMessage?: (message: Uint8Array) => Promise<Uint8Array> }): Promise<WebIrys> {
   if (irysInstance) {
     return irysInstance;
   }
 
   const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "devnet" : "mainnet") as IrysConfig["network"];
+  const rpcUrl = getRpcUrl();
 
   const irys = new WebIrys({
     network,
     token: "solana",
     wallet: {
       provider: wallet,
+      rpcUrl,
     },
   });
 

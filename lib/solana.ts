@@ -1,11 +1,15 @@
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 import type { SolanaNetwork } from "@/types";
 
-export function getConnection(network: SolanaNetwork = "mainnet-beta"): Connection {
-  const endpoint = network === "mainnet-beta"
-    ? process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network)
-    : clusterApiUrl(network);
+// Get RPC URL - custom RPC takes priority over default
+export function getRpcUrl(network: SolanaNetwork = "mainnet-beta"): string {
+  const customRpc = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
+  if (customRpc) return customRpc;
+  return clusterApiUrl(network);
+}
 
+export function getConnection(network: SolanaNetwork = "mainnet-beta"): Connection {
+  const endpoint = getRpcUrl(network);
   return new Connection(endpoint, "confirmed");
 }
 
