@@ -18,7 +18,7 @@ const links = {
   ],
   social: [
     { name: "GitHub", href: "https://github.com/Helix-codes/Helix", icon: Github },
-    { name: "Twitter", href: "https://twitter.com/helix", icon: Twitter },
+    { name: "Twitter", href: "https://x.com/helix_cloud", icon: Twitter },
   ],
 };
 

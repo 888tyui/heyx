@@ -24,7 +24,7 @@ interface RightLink {
 
 const leftLinks: LeftLink[] = [
   { name: "GitHub", href: "https://github.com/Helix-codes/Helix", icon: Github, external: true },
-  { name: "Twitter", href: "https://twitter.com/helix", icon: Twitter, external: true },
+  { name: "Twitter", href: "https://x.com/helix_cloud", icon: Twitter, external: true },
   { name: "Docs", href: "/docs", icon: FileText, external: false },
 ];
 
