@@ -210,6 +210,24 @@ export function Hero() {
 
         {/* Main content - vertically centered */}
         <div className="flex-1 flex flex-col justify-center py-8 lg:py-12">
+          {/* CA Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-6"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#d4622a]/30 bg-[#d4622a]/5 rounded-full">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d4622a] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#d4622a]" />
+              </span>
+              <span className="text-[11px] font-mono tracking-wider text-[#d4622a]/80">
+                CA: Coming soon
+              </span>
+            </div>
+          </motion.div>
+
           {/* Oversized headline with serif */}
           <div className="relative">
             <motion.div
