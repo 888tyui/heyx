@@ -275,6 +275,10 @@ export default function FileDetailPage() {
               <Download className="h-4 w-4" />
               Download
             </a>
+
+            <p className="mt-4 text-[10px] text-white/30 font-mono tracking-wider text-center">
+              IRYS GATEWAY: INSTANT ACCESS / ARWEAVE: UP TO 15 MIN FOR CHAIN CONFIRMATION
+            </p>
           </motion.div>
 
           {/* Encryption Key (if encrypted) */}

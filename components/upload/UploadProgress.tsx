@@ -172,6 +172,11 @@ export function UploadProgress({ progress, onReset }: UploadProgressProps) {
                 <span>{progress.progress.toFixed(0)}%</span>
                 {isComplete && <span className="text-green-500/70">PERMANENT</span>}
               </div>
+              {isComplete && (
+                <p className="text-[9px] text-white/20 font-mono tracking-wider">
+                  ARWEAVE CHAIN CONFIRMATION MAY TAKE UP TO 15 MIN
+                </p>
+              )}
             </div>
           )}
 
