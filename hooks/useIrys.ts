@@ -40,23 +40,28 @@ export function useIrys(): UseIrysReturn {
       const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
         (network === "devnet" ? "https://api.devnet.solana.com" : "https://api.mainnet-beta.solana.com");
 
-      // Create a custom provider that uses signTransaction + sendTransaction
-      // instead of signAndSendTransaction to avoid Phantom warnings
+      // Create a custom provider that overrides Irys SDK's skipPreflight: true
+      // to allow Phantom to properly simulate transactions
       // See: https://docs.phantom.com/developer-powertools/domain-and-transaction-warnings
       const customProvider = {
         publicKey,
         signMessage,
-        // Use signTransaction for single signer to avoid Phantom simulation warnings
-        signTransaction: async (tx: Parameters<typeof signTransaction>[0]) => {
-          return await signTransaction(tx);
-        },
-        // Send transaction separately after signing
-        sendTransaction: async (tx: Parameters<typeof sendTransaction>[0], conn: Parameters<typeof sendTransaction>[1], opts?: Parameters<typeof sendTransaction>[2]) => {
+        signTransaction,
+        signAllTransactions: wallet.signAllTransactions,
+        // Override sendTransaction to fix Irys SDK's skipPreflight: true
+        // Irys SDK hardcodes skipPreflight: true which prevents Phantom from simulating
+        sendTransaction: async (
+          tx: Parameters<typeof sendTransaction>[0],
+          conn: Parameters<typeof sendTransaction>[1],
+          opts?: Parameters<typeof sendTransaction>[2]
+        ) => {
+          // Override skipPreflight to false to allow Phantom simulation
+          // This helps avoid "malicious dApp" warnings
           return await sendTransaction(tx, conn, {
             ...opts,
-            // Pre-simulate with sigVerify: false to prevent onchain failures
             skipPreflight: false,
             preflightCommitment: "confirmed",
+            maxRetries: 3,
           });
         },
       };
