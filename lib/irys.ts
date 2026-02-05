@@ -47,7 +47,10 @@ export async function fundIrys(irys: WebIrys, amount: number): Promise<string> {
   // Convert to atomic units and ensure it's an integer
   const atomicAmount = irys.utils.toAtomic(amount);
   const integerAmount = Math.ceil(atomicAmount.toNumber());
-  const fundTx = await irys.fund(integerAmount);
+
+  // Fund with multiplier to ensure sufficient balance
+  // This helps avoid multiple transaction warnings from Phantom
+  const fundTx = await irys.fund(integerAmount, 1.0);
   return fundTx.id;
 }
 
