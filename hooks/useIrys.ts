@@ -9,7 +9,11 @@ import {
   Transaction,
   SystemProgram,
   LAMPORTS_PER_SOL,
+  TransactionInstruction,
 } from "@solana/web3.js";
+
+// Memo Program ID
+const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
 interface UseIrysReturn {
   irys: WebIrys | null;
@@ -145,9 +149,21 @@ export function useIrys(): UseIrysReturn {
         const bundlerAddress = await getBundlerAddress(client);
         console.log("Irys bundler address:", bundlerAddress);
 
-        // Create a simple SOL transfer transaction
+        // Create a simple SOL transfer transaction with memo
         const lamports = Math.ceil(amount * LAMPORTS_PER_SOL);
-        const transaction = new Transaction().add(
+        const transaction = new Transaction();
+
+        // Add memo to help Phantom understand the transaction purpose
+        transaction.add(
+          new TransactionInstruction({
+            keys: [],
+            programId: MEMO_PROGRAM_ID,
+            data: Buffer.from("Helix: Fund Irys for permanent storage", "utf-8"),
+          })
+        );
+
+        // Add the SOL transfer
+        transaction.add(
           SystemProgram.transfer({
             fromPubkey: publicKey,
             toPubkey: new PublicKey(bundlerAddress),
