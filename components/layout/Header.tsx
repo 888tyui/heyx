@@ -5,18 +5,30 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { cn } from "@/lib/utils";
-import { Menu, X, Github, Twitter } from "lucide-react";
+import { Menu, X, Github, Twitter, FileText, LucideIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 
-const socialLinks = [
-  { name: "GitHub", href: "https://github.com/888tyui/heyx", icon: Github },
-  { name: "Twitter", href: "https://twitter.com/helix", icon: Twitter },
+interface LeftLink {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  external: boolean;
+}
+
+interface RightLink {
+  name: string;
+  href: string;
+}
+
+const leftLinks: LeftLink[] = [
+  { name: "GitHub", href: "https://github.com/888tyui/heyx", icon: Github, external: true },
+  { name: "Twitter", href: "https://twitter.com/helix", icon: Twitter, external: true },
+  { name: "Docs", href: "/docs", icon: FileText, external: false },
 ];
 
-const navLinks = [
-  { name: "Docs", href: "/docs" },
+const rightLinks: RightLink[] = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Upload", href: "/upload" },
 ];
@@ -80,84 +92,101 @@ export function Header() {
       </AnimatePresence>
 
       <nav className="relative h-full container mx-auto flex items-center justify-between px-6 lg:px-12">
-        {/* Logo */}
-        <Link href="/" className="flex items-center group">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
-            className="relative"
-          >
-            <Image
-              src="/lw.png"
-              alt="Helix"
-              width={80}
-              height={28}
-              className="h-6 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
-              priority
-            />
-          </motion.div>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex md:items-center md:gap-6">
-          {/* Social Links */}
-          <div className="flex items-center gap-4">
-            {socialLinks.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/30 hover:text-white/70 transition-colors duration-200"
-                title={item.name}
-              >
-                <item.icon className="h-4 w-4" />
-              </a>
-            ))}
-          </div>
+        {/* Left side - Logo + GitHub, Twitter, Docs */}
+        <div className="flex items-center gap-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center group">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="relative"
+            >
+              <Image
+                src="/lw.png"
+                alt="Helix"
+                width={80}
+                height={28}
+                className="h-6 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                priority
+              />
+            </motion.div>
+          </Link>
 
           {/* Divider */}
-          <div className="w-px h-4 bg-white/10" />
+          <div className="hidden md:block w-px h-4 bg-white/10" />
 
-          {/* Nav Links */}
-          <div className="flex items-center gap-6">
-            {navLinks.map((item) => (
+          {/* Left Nav Links - GitHub, Twitter, Docs */}
+          <div className="hidden md:flex items-center gap-1">
+            {leftLinks.map((item) => (
+              item.external ? (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-white/40 hover:text-white/80 hover:bg-white/5 rounded-md transition-all duration-200"
+                  title={item.name}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span className="text-[13px] tracking-wide">{item.name}</span>
+                </a>
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200",
+                    pathname?.startsWith(item.href)
+                      ? "text-white bg-white/5"
+                      : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span className="text-[13px] tracking-wide">{item.name}</span>
+                </Link>
+              )
+            ))}
+          </div>
+        </div>
+
+        {/* Right side - Dashboard, Upload, Network, Connect */}
+        <div className="flex items-center gap-2">
+          {/* Right Nav Links - Dashboard, Upload */}
+          <div className="hidden md:flex items-center gap-1">
+            {rightLinks.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "relative text-[13px] tracking-wide transition-colors duration-200 py-1",
+                  "relative px-3 py-1.5 text-[13px] tracking-wide rounded-md transition-all duration-200",
                   pathname === item.href
-                    ? "text-white"
-                    : "text-white/40 hover:text-white/70"
+                    ? "text-white bg-white/5"
+                    : "text-white/40 hover:text-white/80 hover:bg-white/5"
                 )}
               >
                 {item.name}
                 {pathname === item.href && (
                   <motion.div
                     layoutId="activeNav"
-                    className="absolute -bottom-[5px] left-0 right-0 h-px bg-[#d4622a]"
+                    className="absolute bottom-0 left-3 right-3 h-px bg-[#d4622a]"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
               </Link>
             ))}
           </div>
-        </div>
 
-        {/* Right side */}
-        <div className="flex items-center gap-5">
+          {/* Divider */}
+          <div className="hidden md:block w-px h-4 bg-white/10 mx-2" />
+
           {/* Network indicator with pulse */}
-          <div className="hidden sm:flex items-center gap-2 text-[10px] text-white/30 font-mono tracking-widest">
+          <div className="hidden sm:flex items-center gap-2 text-[10px] text-white/30 font-mono tracking-widest mr-2">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
             </span>
             <span className="opacity-60">MAINNET</span>
           </div>
-
-          {/* Divider with gradient */}
-          <div className="hidden sm:block w-px h-4 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
 
           {/* Wallet Button - Desktop */}
           <div className="hidden md:block">
@@ -208,55 +237,72 @@ export function Header() {
             className="md:hidden absolute top-16 left-0 right-0 border-t border-white/5 bg-[#0a0a0a]/98 backdrop-blur-xl overflow-hidden"
           >
             <div className="container mx-auto px-6 py-8 space-y-2">
-              {/* Nav Links */}
-              {navLinks.map((item, index) => (
+              {/* Left Links with Icons */}
+              {leftLinks.map((item, index) => (
                 <motion.div
                   key={item.name}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
+                  {item.external ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 py-3 text-lg border-b border-white/5 text-white/50 hover:text-white transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 py-3 text-lg border-b border-white/5 transition-colors",
+                        pathname === item.href || (item.href === "/docs" && pathname?.startsWith("/docs"))
+                          ? "text-[#d4622a]"
+                          : "text-white/50 hover:text-white"
+                      )}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span className="flex-1">{item.name}</span>
+                      {(pathname === item.href || (item.href === "/docs" && pathname?.startsWith("/docs"))) && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#d4622a]" />
+                      )}
+                    </Link>
+                  )}
+                </motion.div>
+              ))}
+
+              {/* Right Links without Icons */}
+              {rightLinks.map((item, index) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (leftLinks.length + index) * 0.1 }}
+                >
                   <Link
                     href={item.href}
                     className={cn(
-                      "block py-3 text-lg font-serif border-b border-white/5 transition-colors",
+                      "flex items-center gap-3 py-3 text-lg border-b border-white/5 transition-colors",
                       pathname === item.href
                         ? "text-[#d4622a]"
                         : "text-white/50 hover:text-white"
                     )}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <span className="flex items-center justify-between">
-                      {item.name}
-                      {pathname === item.href && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#d4622a]" />
-                      )}
-                    </span>
+                    <span className="flex-1">{item.name}</span>
+                    {pathname === item.href && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d4622a]" />
+                    )}
                   </Link>
                 </motion.div>
               ))}
 
-              {/* Social Links */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center gap-4 py-4"
-              >
-                {socialLinks.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-white/40 hover:text-white transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="text-sm">{item.name}</span>
-                  </a>
-                ))}
-              </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
