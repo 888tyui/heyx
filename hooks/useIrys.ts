@@ -1,19 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useWallet, useConnection } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { WebIrys } from "@irys/sdk";
-import { getIrysBalance, getUploadPrice } from "@/lib/irys";
-import {
-  PublicKey,
-  Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-  TransactionInstruction,
-} from "@solana/web3.js";
-
-// Memo Program ID
-const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+import { getIrysBalance, getUploadPrice, fundIrys } from "@/lib/irys";
 
 interface UseIrysReturn {
   irys: WebIrys | null;
@@ -30,7 +20,6 @@ interface UseIrysReturn {
 export function useIrys(): UseIrysReturn {
   const wallet = useWallet();
   const { publicKey, signMessage, signTransaction, sendTransaction } = wallet;
-  const { connection } = useConnection();
   const [irys, setIrys] = useState<WebIrys | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +90,7 @@ export function useIrys(): UseIrysReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [publicKey, signMessage, signTransaction, sendTransaction, connection]);
+  }, [publicKey, signMessage, signTransaction, sendTransaction, wallet.signAllTransactions]);
 
   const getPrice = useCallback(
     async (bytes: number): Promise<number> => {
@@ -115,27 +104,8 @@ export function useIrys(): UseIrysReturn {
     [irys, connect]
   );
 
-  // Get Irys bundler address for direct SOL transfer
-  const getBundlerAddress = useCallback(async (client: WebIrys): Promise<string> => {
-    const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "devnet" : "mainnet";
-    const baseUrl = network === "devnet"
-      ? "https://devnet.irys.xyz"
-      : "https://node1.irys.xyz";
-
-    const response = await fetch(`${baseUrl}/info`);
-    const info = await response.json();
-    return info.addresses.solana;
-  }, []);
-
-  // Direct SOL transfer to Irys bundler - DEBUG VERSION
-  // Split into separate steps to identify where Phantom warning occurs
-  const fundWithDirectTransfer = useCallback(
+  const fund = useCallback(
     async (amount: number): Promise<string | null> => {
-      if (!publicKey || !signTransaction || !signMessage || !connection) {
-        setError("Wallet not connected");
-        return null;
-      }
-
       let client = irys;
       if (!client) {
         client = await connect();
@@ -146,114 +116,27 @@ export function useIrys(): UseIrysReturn {
       setError(null);
 
       try {
-        // ========== STEP 1: Message Signature (DEBUG) ==========
-        console.log("🔵 STEP 1: Requesting message signature...");
-        const messageToSign = `Helix Debug: Authorize funding ${amount} SOL to Irys\nTimestamp: ${Date.now()}`;
-
-        try {
-          const encodedMessage = new TextEncoder().encode(messageToSign);
-          const signature = await signMessage(encodedMessage);
-          console.log("✅ STEP 1 PASSED: Message signed successfully", signature);
-        } catch (err) {
-          console.error("❌ STEP 1 FAILED: Message signature rejected", err);
-          throw new Error("Message signature rejected by user");
-        }
-
-        // ========== STEP 2: Get Irys Bundler Address ==========
-        console.log("🔵 STEP 2: Getting Irys bundler address...");
-        const bundlerAddress = await getBundlerAddress(client);
-        console.log("✅ STEP 2 PASSED: Bundler address:", bundlerAddress);
-
-        // ========== STEP 3: Build Transaction ==========
-        console.log("🔵 STEP 3: Building transaction...");
-        const lamports = Math.ceil(amount * LAMPORTS_PER_SOL);
-        const transaction = new Transaction();
-
-        // Add memo
-        transaction.add(
-          new TransactionInstruction({
-            keys: [],
-            programId: MEMO_PROGRAM_ID,
-            data: Buffer.from("Helix: Fund Irys for permanent storage", "utf-8"),
-          })
-        );
-
-        // Add SOL transfer
-        transaction.add(
-          SystemProgram.transfer({
-            fromPubkey: publicKey,
-            toPubkey: new PublicKey(bundlerAddress),
-            lamports,
-          })
-        );
-
-        // Get recent blockhash
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = publicKey;
-        console.log("✅ STEP 3 PASSED: Transaction built", {
-          lamports,
-          to: bundlerAddress,
-          blockhash,
-        });
-
-        // ========== STEP 4: Sign Transaction ==========
-        console.log("🔵 STEP 4: Requesting transaction signature...");
-        console.log("⚠️ CHECK PHANTOM NOW - Does warning appear here?");
-
-        let signedTx;
-        try {
-          signedTx = await signTransaction(transaction);
-          console.log("✅ STEP 4 PASSED: Transaction signed");
-        } catch (err) {
-          console.error("❌ STEP 4 FAILED: Transaction signature rejected", err);
-          throw new Error("Transaction signature rejected by user");
-        }
-
-        // ========== STEP 5: Send Transaction ==========
-        console.log("🔵 STEP 5: Sending signed transaction...");
-        const txId = await connection.sendRawTransaction(signedTx.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: "confirmed",
-        });
-        console.log("✅ STEP 5 PASSED: Transaction sent, txId:", txId);
-
-        // ========== STEP 6: Confirm Transaction ==========
-        console.log("🔵 STEP 6: Waiting for confirmation...");
-        await connection.confirmTransaction({
-          blockhash,
-          lastValidBlockHeight,
-          signature: txId,
-        }, "confirmed");
-        console.log("✅ STEP 6 PASSED: Transaction confirmed");
+        // Use Irys SDK's native fund method (lazy funding)
+        const txId = await fundIrys(client, amount);
 
         // Wait for Irys to recognize the deposit
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Refresh balance
         const bal = await getIrysBalance(client);
         setBalance(bal);
 
-        console.log("🎉 ALL STEPS COMPLETED SUCCESSFULLY");
         return txId;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to fund Irys";
         setError(message);
-        console.error("❌ Fund error:", err);
+        console.error("Fund error:", err);
         return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [irys, publicKey, signTransaction, signMessage, connection, connect, getBundlerAddress]
-  );
-
-  const fund = useCallback(
-    async (amount: number): Promise<string | null> => {
-      // Use direct transfer instead of Irys SDK fund
-      return fundWithDirectTransfer(amount);
-    },
-    [fundWithDirectTransfer]
+    [irys, connect]
   );
 
   const refreshBalance = useCallback(async (): Promise<void> => {
@@ -279,10 +162,9 @@ export function useIrys(): UseIrysReturn {
         if (currentBalance < price) {
           // Fund with a little extra (10% buffer)
           const amountToFund = (price - currentBalance) * 1.1;
-          console.log(`Funding Irys with ${amountToFund} SOL via direct transfer...`);
+          console.log(`Funding Irys with ${amountToFund} SOL...`);
 
-          // Use direct SOL transfer instead of Irys SDK
-          const txId = await fundWithDirectTransfer(amountToFund);
+          const txId = await fund(amountToFund);
           if (!txId) {
             throw new Error("Failed to fund Irys");
           }
@@ -299,7 +181,7 @@ export function useIrys(): UseIrysReturn {
         return false;
       }
     },
-    [irys, connect]
+    [irys, connect, fund]
   );
 
   return {

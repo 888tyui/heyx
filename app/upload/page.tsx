@@ -7,7 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FileDropzone, UploadProgress } from "@/components/upload";
 import { useFileUpload, useIrys } from "@/hooks";
-import { ArrowLeft, Upload, Lock, Unlock, Info } from "lucide-react";
+import { ArrowLeft, Upload, Lock, Unlock, Info, AlertTriangle } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
 
 export default function UploadPage() {
@@ -236,6 +236,15 @@ export default function UploadPage() {
                   <p className="text-[10px] text-white/30 font-mono tracking-wider">
                     FOR {formatBytes(selectedFile.size).toUpperCase()}
                   </p>
+                </div>
+              </div>
+
+              {/* Phantom Warning Notice */}
+              <div className="flex items-start gap-3 p-4 bg-yellow-500/5 border border-yellow-500/20 mb-4">
+                <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <div className="text-[11px] text-yellow-500/80 leading-relaxed">
+                  <span className="font-medium">Phantom may show a warning</span> — This is normal when
+                  sending SOL to Irys for permanent storage. The transaction is safe to approve.
                 </div>
               </div>
 

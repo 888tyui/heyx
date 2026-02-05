@@ -123,11 +123,7 @@ export function useFileUpload(): UseFileUploadReturn {
           message: "Uploading to Arweave via Irys...",
         });
 
-        console.log("🔵 UPLOAD STEP: Calling irysClient.upload()...");
-        console.log("⚠️ CHECK PHANTOM NOW - Does warning appear during upload?");
-
         const receipt = await irysClient.upload(dataToUpload, { tags });
-        console.log("✅ UPLOAD STEP PASSED: Receipt received", receipt.id);
 
         setProgress({
           status: "confirming",
