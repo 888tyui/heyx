@@ -223,7 +223,7 @@ export function Hero() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#d4622a]" />
               </span>
               <span className="text-[11px] font-mono tracking-wider text-[#d4622a]/80">
-                CA: Coming soon
+                CA: AwnQvpSU7E1VraPLNZ2SaJeTgiVENzDMXq4Eozygpump
               </span>
             </div>
           </motion.div>
