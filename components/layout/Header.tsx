@@ -11,8 +11,9 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { useWallet } from "@solana/wallet-adapter-react";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard" },
-  { name: "Upload", href: "/upload" },
+  { name: "Dashboard", href: "/dashboard", requiresAuth: true },
+  { name: "Upload", href: "/upload", requiresAuth: true },
+  { name: "Docs", href: "/docs", requiresAuth: false },
 ];
 
 export function Header() {
@@ -94,8 +95,9 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex md:items-center md:gap-8">
-          {connected &&
-            navigation.map((item) => (
+          {navigation
+            .filter((item) => !item.requiresAuth || connected)
+            .map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -181,8 +183,9 @@ export function Header() {
             className="md:hidden absolute top-16 left-0 right-0 border-t border-white/5 bg-[#0a0a0a]/98 backdrop-blur-xl overflow-hidden"
           >
             <div className="container mx-auto px-6 py-8 space-y-2">
-              {connected &&
-                navigation.map((item, index) => (
+              {navigation
+                .filter((item) => !item.requiresAuth || connected)
+                .map((item, index) => (
                   <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: -20 }}
