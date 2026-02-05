@@ -17,8 +17,8 @@ const links = {
     { name: "Solana", href: "https://solana.com", external: true },
   ],
   social: [
-    { name: "GitHub", href: "https://github.com", icon: Github },
-    { name: "Twitter", href: "https://twitter.com", icon: Twitter },
+    { name: "GitHub", href: "https://github.com/Helix-codes/Helix", icon: Github },
+    { name: "Twitter", href: "https://twitter.com/helix", icon: Twitter },
   ],
 };
 
