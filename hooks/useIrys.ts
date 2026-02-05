@@ -3,7 +3,13 @@
 import { useState, useCallback } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WebIrys } from "@irys/sdk";
-import { getIrysBalance, getUploadPrice, fundIrys } from "@/lib/irys";
+import { getIrysBalance, getUploadPrice } from "@/lib/irys";
+import {
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 
 interface UseIrysReturn {
   irys: WebIrys | null;
@@ -105,30 +111,99 @@ export function useIrys(): UseIrysReturn {
     [irys, connect]
   );
 
-  const fund = useCallback(
+  // Get Irys bundler address for direct SOL transfer
+  const getBundlerAddress = useCallback(async (client: WebIrys): Promise<string> => {
+    const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "devnet" ? "devnet" : "mainnet";
+    const baseUrl = network === "devnet"
+      ? "https://devnet.irys.xyz"
+      : "https://node1.irys.xyz";
+
+    const response = await fetch(`${baseUrl}/info`);
+    const info = await response.json();
+    return info.addresses.solana;
+  }, []);
+
+  // Direct SOL transfer to Irys bundler (avoids Phantom warnings)
+  const fundWithDirectTransfer = useCallback(
     async (amount: number): Promise<string | null> => {
-      if (!irys) {
-        setError("Irys not connected");
+      if (!publicKey || !signTransaction || !connection) {
+        setError("Wallet not connected");
         return null;
+      }
+
+      let client = irys;
+      if (!client) {
+        client = await connect();
+        if (!client) return null;
       }
 
       setIsLoading(true);
       setError(null);
 
       try {
-        const txId = await fundIrys(irys, amount);
-        const bal = await getIrysBalance(irys);
+        // Get Irys bundler address
+        const bundlerAddress = await getBundlerAddress(client);
+        console.log("Irys bundler address:", bundlerAddress);
+
+        // Create a simple SOL transfer transaction
+        const lamports = Math.ceil(amount * LAMPORTS_PER_SOL);
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: new PublicKey(bundlerAddress),
+            lamports,
+          })
+        );
+
+        // Get recent blockhash
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = publicKey;
+
+        // Sign the transaction (Phantom will show a normal SOL transfer)
+        const signedTx = await signTransaction(transaction);
+
+        // Send the signed transaction
+        const txId = await connection.sendRawTransaction(signedTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: "confirmed",
+        });
+
+        // Wait for confirmation
+        await connection.confirmTransaction({
+          blockhash,
+          lastValidBlockHeight,
+          signature: txId,
+        }, "confirmed");
+
+        console.log("Fund transaction confirmed:", txId);
+
+        // Wait a bit for Irys to recognize the deposit
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Refresh balance
+        const bal = await getIrysBalance(client);
         setBalance(bal);
+
         return txId;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to fund Irys";
         setError(message);
+        console.error("Direct fund error:", err);
         return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [irys]
+    [irys, publicKey, signTransaction, connection, connect, getBundlerAddress]
+  );
+
+  const fund = useCallback(
+    async (amount: number): Promise<string | null> => {
+      // Use direct transfer instead of Irys SDK fund
+      return fundWithDirectTransfer(amount);
+    },
+    [fundWithDirectTransfer]
   );
 
   const refreshBalance = useCallback(async (): Promise<void> => {
@@ -154,8 +229,14 @@ export function useIrys(): UseIrysReturn {
         if (currentBalance < price) {
           // Fund with a little extra (10% buffer)
           const amountToFund = (price - currentBalance) * 1.1;
-          console.log(`Funding Irys with ${amountToFund} SOL...`);
-          await fundIrys(client, amountToFund);
+          console.log(`Funding Irys with ${amountToFund} SOL via direct transfer...`);
+
+          // Use direct SOL transfer instead of Irys SDK
+          const txId = await fundWithDirectTransfer(amountToFund);
+          if (!txId) {
+            throw new Error("Failed to fund Irys");
+          }
+
           const newBalance = await getIrysBalance(client);
           setBalance(newBalance);
         }
