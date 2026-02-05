@@ -39,7 +39,7 @@ const sections = [
   { id: "roadmap", title: "Roadmap", icon: Rocket },
 ];
 
-function CodeBlock({ children, language = "typescript" }: { children: string; language?: string }) {
+function CodeBlock({ children }: { children: string }) {
   return (
     <pre className="bg-black/50 border border-white/10 p-4 overflow-x-auto text-sm">
       <code className="text-green-400 font-mono">{children}</code>
@@ -164,41 +164,41 @@ export default function DocsPage() {
           {/* Overview */}
           <SectionTitle id="overview">1. Overview</SectionTitle>
           <Paragraph>
-            Helix는 Solana 블록체인과 Arweave 영구 저장소를 결합한 탈중앙화 파일 저장 플랫폼입니다.
-            사용자는 지갑 연결만으로 파일을 영구적으로 저장하고, 선택적으로 클라이언트 사이드 암호화를
-            적용하여 프라이버시를 보장받을 수 있습니다.
+            Helix is a decentralized file storage platform that combines Solana blockchain
+            with Arweave permanent storage. Users can permanently store files with just a
+            wallet connection and optionally apply client-side encryption for complete privacy.
           </Paragraph>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-8">
             <FeatureCard
               icon={Globe}
               title="Permanent Storage"
-              description="Arweave에 저장된 데이터는 최소 200년 이상 보존"
+              description="Data stored on Arweave is preserved for 200+ years"
             />
             <FeatureCard
               icon={Lock}
               title="Client-Side Encryption"
-              description="AES-256-GCM 암호화로 서버도 데이터 열람 불가"
+              description="AES-256-GCM encryption - even the server can't read your data"
             />
             <FeatureCard
               icon={Wallet}
               title="Wallet-Based Auth"
-              description="이메일/비밀번호 없이 Solana 지갑으로 인증"
+              description="No email or password needed - just connect your Solana wallet"
             />
             <FeatureCard
               icon={Share2}
               title="Shareable Links"
-              description="암호화된 파일도 안전하게 공유 가능"
+              description="Share encrypted files securely with anyone"
             />
             <FeatureCard
               icon={Coins}
               title="One-Time Payment"
-              description="월 구독 없이 저장 비용 1회 지불"
+              description="No monthly subscriptions - pay once, store forever"
             />
             <FeatureCard
               icon={Code}
               title="Open Architecture"
-              description="투명한 코드와 표준 기술 사용"
+              description="Transparent code using industry-standard technologies"
             />
           </div>
 
@@ -214,10 +214,10 @@ Deployment:   Railway`}</CodeBlock>
           {/* Problem Statement */}
           <SectionTitle id="problem">2. Problem Statement</SectionTitle>
 
-          <SubSection>중앙화된 클라우드 스토리지의 한계</SubSection>
+          <SubSection>Limitations of Centralized Cloud Storage</SubSection>
           <Paragraph>
-            현재 대부분의 클라우드 스토리지 서비스(Google Drive, Dropbox, AWS S3)는
-            근본적인 문제를 가지고 있습니다.
+            Most cloud storage services (Google Drive, Dropbox, AWS S3) have fundamental
+            problems that compromise data ownership and longevity.
           </Paragraph>
 
           <Diagram>{`┌─────────────────────────────────────────────────────────┐
@@ -225,43 +225,43 @@ Deployment:   Railway`}</CodeBlock>
 ├─────────────────────────────────────────────────────────┤
 │  User → Upload → Company Server → Company Controls Data │
 │                                                         │
-│  - 서비스 종료 시 데이터 손실                              │
-│  - 약관 변경으로 접근 제한 가능                            │
-│  - 정부/기관 요청 시 데이터 제공                           │
-│  - 서버 해킹 시 전체 데이터 유출                           │
+│  - Data loss when service shuts down                    │
+│  - Access can be restricted by policy changes           │
+│  - Data can be handed over to authorities               │
+│  - Server breach exposes all data                       │
 └─────────────────────────────────────────────────────────┘`}</Diagram>
 
-          <SubSection>지속적인 비용 부담</SubSection>
-          <CodeBlock language="javascript">{`// Traditional Cloud: Recurring Monthly Cost
+          <SubSection>Recurring Cost Burden</SubSection>
+          <CodeBlock>{`// Traditional Cloud: Recurring Monthly Cost
 const monthlyCost = storageGB * pricePerGB; // $0.02-0.10/GB/month
 const yearlyCost = monthlyCost * 12;
-const decadeCost = yearlyCost * 10; // 10년간 지속 지불
+const decadeCost = yearlyCost * 10; // Continuous payment for 10 years
 
 // Example: 100GB for 10 years
-// AWS S3: ~$276 (recurring)
-// Google Drive: ~$240 (recurring)`}</CodeBlock>
+// AWS S3: ~$276 (recurring annually)
+// Google Drive: ~$240 (recurring annually)`}</CodeBlock>
 
-          <SubSection>기존 탈중앙화 스토리지의 문제점</SubSection>
+          <SubSection>Problems with Existing Decentralized Storage</SubSection>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border border-white/10">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">
-                  <th className="text-left p-3 text-white">솔루션</th>
-                  <th className="text-left p-3 text-white">문제점</th>
+                  <th className="text-left p-3 text-white">Solution</th>
+                  <th className="text-left p-3 text-white">Problems</th>
                 </tr>
               </thead>
               <tbody className="text-white/60">
                 <tr className="border-b border-white/5">
                   <td className="p-3 font-mono">IPFS</td>
-                  <td className="p-3">영구성 미보장 (pinning 필요), 복잡한 노드 운영</td>
+                  <td className="p-3">No permanence guarantee (requires pinning), complex node operation</td>
                 </tr>
                 <tr className="border-b border-white/5">
                   <td className="p-3 font-mono">Filecoin</td>
-                  <td className="p-3">높은 최소 저장 용량, 복잡한 deal 과정</td>
+                  <td className="p-3">High minimum storage requirements, complex deal process</td>
                 </tr>
                 <tr>
                   <td className="p-3 font-mono">Storj</td>
-                  <td className="p-3">중앙화된 게이트웨이 의존</td>
+                  <td className="p-3">Relies on centralized gateways</td>
                 </tr>
               </tbody>
             </table>
@@ -315,8 +315,9 @@ const decadeCost = yearlyCost * 10; // 10년간 지속 지불
 
           <SubSection>Arweave: The Permaweb</SubSection>
           <Paragraph>
-            Arweave는 &ldquo;pay once, store forever&rdquo; 모델을 구현한 블록체인 기반 영구 저장소입니다.
-            Storage Endowment 모델을 통해 한 번의 결제로 200년 이상의 저장을 보장합니다.
+            Arweave is a blockchain-based permanent storage system implementing the
+            &ldquo;pay once, store forever&rdquo; model. Through the Storage Endowment model,
+            a single payment guarantees storage for over 200 years.
           </Paragraph>
 
           <CodeBlock>{`// Arweave's Endowment Model
@@ -334,8 +335,8 @@ const ARWEAVE_STORAGE = {
 
           <SubSection>Irys: The Upload Layer</SubSection>
           <Paragraph>
-            Irys(구 Bundlr)는 Arweave 업로드를 최적화하는 레이어입니다.
-            SOL로 결제하고 즉시 업로드할 수 있습니다.
+            Irys (formerly Bundlr) is a layer that optimizes uploads to Arweave.
+            Pay with SOL and upload instantly.
           </Paragraph>
 
           <CodeBlock>{`import { WebIrys } from "@irys/sdk";
@@ -403,12 +404,12 @@ console.log("Arweave TX:", receipt.id);`}</CodeBlock>
 
           <SubSection>Signature Requests</SubSection>
           <Paragraph>
-            업로드 과정에서 지갑에 3번의 서명 요청이 발생합니다:
+            During the upload process, 3 signature requests are made to your wallet:
           </Paragraph>
           <ol className="list-decimal list-inside text-white/60 space-y-2 ml-4">
-            <li><span className="text-white">Irys 인증</span> - signMessage로 Irys 노드 인증</li>
-            <li><span className="text-white">펀딩 트랜잭션</span> - SOL을 Irys 노드로 전송 (잔액 부족 시)</li>
-            <li><span className="text-white">데이터 서명</span> - 업로드할 데이터 서명</li>
+            <li><span className="text-white">Irys Authentication</span> - signMessage to authenticate with Irys node</li>
+            <li><span className="text-white">Funding Transaction</span> - Transfer SOL to Irys node (if balance insufficient)</li>
+            <li><span className="text-white">Data Signing</span> - Sign the data to be uploaded</li>
           </ol>
 
           {/* Security */}
@@ -493,7 +494,7 @@ const encrypt = async (file: File) => {
               <tbody className="text-white/60">
                 <tr className="border-b border-white/5">
                   <td className="p-3">Key Size</td>
-                  <td className="p-3">256 bits - brute force 불가능</td>
+                  <td className="p-3">256 bits - impossible to brute force</td>
                 </tr>
                 <tr className="border-b border-white/5">
                   <td className="p-3">Mode</td>
@@ -505,7 +506,7 @@ const encrypt = async (file: File) => {
                 </tr>
                 <tr>
                   <td className="p-3">IV</td>
-                  <td className="p-3">12 bytes, 파일마다 랜덤 생성</td>
+                  <td className="p-3">12 bytes, randomly generated per file</td>
                 </tr>
               </tbody>
             </table>
@@ -564,32 +565,32 @@ model ShareLink {
                 <tr className="border-b border-white/5">
                   <td className="p-3">/api/files</td>
                   <td className="p-3">GET</td>
-                  <td className="p-3">사용자 파일 목록 조회</td>
+                  <td className="p-3">Get user&apos;s file list</td>
                 </tr>
                 <tr className="border-b border-white/5">
                   <td className="p-3">/api/files</td>
                   <td className="p-3">POST</td>
-                  <td className="p-3">새 파일 메타데이터 저장</td>
+                  <td className="p-3">Save new file metadata</td>
                 </tr>
                 <tr className="border-b border-white/5">
                   <td className="p-3">/api/files/[id]</td>
                   <td className="p-3">DELETE</td>
-                  <td className="p-3">파일 메타데이터 삭제</td>
+                  <td className="p-3">Delete file metadata</td>
                 </tr>
                 <tr className="border-b border-white/5">
                   <td className="p-3">/api/share</td>
                   <td className="p-3">GET</td>
-                  <td className="p-3">공유 링크로 파일 접근</td>
+                  <td className="p-3">Access file via share link</td>
                 </tr>
                 <tr className="border-b border-white/5">
                   <td className="p-3">/api/share</td>
                   <td className="p-3">POST</td>
-                  <td className="p-3">공유 링크 생성</td>
+                  <td className="p-3">Create share link</td>
                 </tr>
                 <tr>
                   <td className="p-3">/api/stats</td>
                   <td className="p-3">GET</td>
-                  <td className="p-3">스토리지 통계</td>
+                  <td className="p-3">Get storage statistics</td>
                 </tr>
               </tbody>
             </table>
@@ -668,37 +669,37 @@ Comparison (10-year TCO for 100GB):
             <div className="border border-white/10 p-5 bg-white/[0.02]">
               <h4 className="text-white font-serif text-lg mb-3">AI Model Storage</h4>
               <ul className="text-white/50 text-sm space-y-2">
-                <li>- 모델 가중치 영구 저장</li>
-                <li>- 버전 관리 및 출처 증명</li>
-                <li>- 연구 재현성 보장</li>
-                <li>- 무결성 검증 가능</li>
+                <li>- Permanent storage of model weights</li>
+                <li>- Version control and provenance</li>
+                <li>- Research reproducibility</li>
+                <li>- Integrity verification</li>
               </ul>
             </div>
             <div className="border border-white/10 p-5 bg-white/[0.02]">
               <h4 className="text-white font-serif text-lg mb-3">Research Data</h4>
               <ul className="text-white/50 text-sm space-y-2">
-                <li>- 연구 데이터셋 보존</li>
-                <li>- 논문 인용용 영구 URL</li>
-                <li>- 변조 불가능한 기록</li>
-                <li>- 일회성 연구비 지출</li>
+                <li>- Dataset preservation</li>
+                <li>- Permanent URLs for citations</li>
+                <li>- Tamper-proof records</li>
+                <li>- One-time grant expenditure</li>
               </ul>
             </div>
             <div className="border border-white/10 p-5 bg-white/[0.02]">
               <h4 className="text-white font-serif text-lg mb-3">NFT Assets</h4>
               <ul className="text-white/50 text-sm space-y-2">
-                <li>- 메타데이터 영구 저장</li>
-                <li>- IPFS 404 문제 해결</li>
-                <li>- 진정한 온체인 아트</li>
-                <li>- 컬렉션 자산 보호</li>
+                <li>- Permanent metadata storage</li>
+                <li>- Solve IPFS 404 problem</li>
+                <li>- True on-chain art</li>
+                <li>- Collection asset protection</li>
               </ul>
             </div>
             <div className="border border-white/10 p-5 bg-white/[0.02]">
               <h4 className="text-white font-serif text-lg mb-3">Personal Vault</h4>
               <ul className="text-white/50 text-sm space-y-2">
-                <li>- 가족 사진 영구 보존</li>
-                <li>- 중요 문서 백업</li>
-                <li>- 디지털 유산</li>
-                <li>- 세대를 넘는 저장</li>
+                <li>- Family photo preservation</li>
+                <li>- Important document backup</li>
+                <li>- Digital inheritance</li>
+                <li>- Cross-generational storage</li>
               </ul>
             </div>
           </div>
@@ -711,11 +712,11 @@ Comparison (10-year TCO for 100GB):
               <p className="text-[#d4622a] font-mono text-sm">Phase 1 - Current</p>
               <h4 className="text-white font-serif text-lg mt-1">Foundation</h4>
               <ul className="text-white/50 text-sm mt-2 space-y-1">
-                <li>✓ Solana wallet integration</li>
-                <li>✓ Irys/Arweave upload</li>
-                <li>✓ Client-side encryption</li>
-                <li>✓ PostgreSQL metadata storage</li>
-                <li>✓ Basic file sharing</li>
+                <li>&#10003; Solana wallet integration</li>
+                <li>&#10003; Irys/Arweave upload</li>
+                <li>&#10003; Client-side encryption</li>
+                <li>&#10003; PostgreSQL metadata storage</li>
+                <li>&#10003; Basic file sharing</li>
               </ul>
             </div>
 
@@ -723,11 +724,11 @@ Comparison (10-year TCO for 100GB):
               <p className="text-white/40 font-mono text-sm">Phase 2 - Q2 2025</p>
               <h4 className="text-white font-serif text-lg mt-1">Enhanced Features</h4>
               <ul className="text-white/50 text-sm mt-2 space-y-1">
-                <li>○ Folder organization</li>
-                <li>○ Batch upload</li>
-                <li>○ Download with decryption</li>
-                <li>○ Password-protected shares</li>
-                <li>○ File preview</li>
+                <li>&#9675; Folder organization</li>
+                <li>&#9675; Batch upload</li>
+                <li>&#9675; Download with decryption</li>
+                <li>&#9675; Password-protected shares</li>
+                <li>&#9675; File preview</li>
               </ul>
             </div>
 
@@ -735,10 +736,10 @@ Comparison (10-year TCO for 100GB):
               <p className="text-white/40 font-mono text-sm">Phase 3 - Q3 2025</p>
               <h4 className="text-white font-serif text-lg mt-1">Advanced Security</h4>
               <ul className="text-white/50 text-sm mt-2 space-y-1">
-                <li>○ Wallet-derived encryption keys</li>
-                <li>○ Threshold encryption</li>
-                <li>○ Hardware wallet support</li>
-                <li>○ E2E encrypted sharing</li>
+                <li>&#9675; Wallet-derived encryption keys</li>
+                <li>&#9675; Threshold encryption</li>
+                <li>&#9675; Hardware wallet support</li>
+                <li>&#9675; E2E encrypted sharing</li>
               </ul>
             </div>
 
@@ -746,10 +747,10 @@ Comparison (10-year TCO for 100GB):
               <p className="text-white/40 font-mono text-sm">Phase 4 - Q4 2025</p>
               <h4 className="text-white font-serif text-lg mt-1">Ecosystem</h4>
               <ul className="text-white/50 text-sm mt-2 space-y-1">
-                <li>○ Public API</li>
-                <li>○ SDK release</li>
-                <li>○ Mobile app</li>
-                <li>○ Desktop app</li>
+                <li>&#9675; Public API</li>
+                <li>&#9675; SDK release</li>
+                <li>&#9675; Mobile app</li>
+                <li>&#9675; Desktop app</li>
               </ul>
             </div>
 
@@ -757,9 +758,9 @@ Comparison (10-year TCO for 100GB):
               <p className="text-white/40 font-mono text-sm">Phase 5 - 2026</p>
               <h4 className="text-white font-serif text-lg mt-1">Decentralization</h4>
               <ul className="text-white/50 text-sm mt-2 space-y-1">
-                <li>○ IPFS backup layer</li>
-                <li>○ Decentralized metadata</li>
-                <li>○ DAO governance</li>
+                <li>&#9675; IPFS backup layer</li>
+                <li>&#9675; Decentralized metadata</li>
+                <li>&#9675; DAO governance</li>
               </ul>
             </div>
           </div>

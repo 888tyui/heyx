@@ -5,15 +5,20 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Github, Twitter } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", requiresAuth: true },
-  { name: "Upload", href: "/upload", requiresAuth: true },
-  { name: "Docs", href: "/docs", requiresAuth: false },
+const socialLinks = [
+  { name: "GitHub", href: "https://github.com/888tyui/heyx", icon: Github },
+  { name: "Twitter", href: "https://twitter.com/helix", icon: Twitter },
+];
+
+const navLinks = [
+  { name: "Docs", href: "/docs" },
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Upload", href: "/upload" },
 ];
 
 export function Header() {
@@ -94,15 +99,34 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex md:items-center md:gap-8">
-          {navigation
-            .filter((item) => !item.requiresAuth || connected)
-            .map((item) => (
+        <div className="hidden md:flex md:items-center md:gap-6">
+          {/* Social Links */}
+          <div className="flex items-center gap-4">
+            {socialLinks.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/30 hover:text-white/70 transition-colors duration-200"
+                title={item.name}
+              >
+                <item.icon className="h-4 w-4" />
+              </a>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-white/10" />
+
+          {/* Nav Links */}
+          <div className="flex items-center gap-6">
+            {navLinks.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "relative text-[13px] tracking-wide transition-colors duration-200 py-1 link-underline link-underline-accent",
+                  "relative text-[13px] tracking-wide transition-colors duration-200 py-1",
                   pathname === item.href
                     ? "text-white"
                     : "text-white/40 hover:text-white/70"
@@ -118,6 +142,7 @@ export function Header() {
                 )}
               </Link>
             ))}
+          </div>
         </div>
 
         {/* Right side */}
@@ -183,39 +208,60 @@ export function Header() {
             className="md:hidden absolute top-16 left-0 right-0 border-t border-white/5 bg-[#0a0a0a]/98 backdrop-blur-xl overflow-hidden"
           >
             <div className="container mx-auto px-6 py-8 space-y-2">
-              {navigation
-                .filter((item) => !item.requiresAuth || connected)
-                .map((item, index) => (
-                  <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
+              {/* Nav Links */}
+              {navLinks.map((item, index) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "block py-3 text-lg font-serif border-b border-white/5 transition-colors",
+                      pathname === item.href
+                        ? "text-[#d4622a]"
+                        : "text-white/50 hover:text-white"
+                    )}
+                    onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "block py-3 text-lg font-serif border-b border-white/5 transition-colors",
-                        pathname === item.href
-                          ? "text-[#d4622a]"
-                          : "text-white/50 hover:text-white"
+                    <span className="flex items-center justify-between">
+                      {item.name}
+                      {pathname === item.href && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#d4622a]" />
                       )}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="flex items-center justify-between">
-                        {item.name}
-                        {pathname === item.href && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#d4622a]" />
-                        )}
-                      </span>
-                    </Link>
-                  </motion.div>
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+
+              {/* Social Links */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-4 py-4"
+              >
+                {socialLinks.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-white/40 hover:text-white transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="text-sm">{item.name}</span>
+                  </a>
                 ))}
+              </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="pt-6"
+                transition={{ delay: 0.4 }}
+                className="pt-4"
               >
                 <WalletButton />
               </motion.div>
