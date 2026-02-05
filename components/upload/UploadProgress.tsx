@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Sparkles,
 } from "lucide-react";
-import { cn, getArweaveUrl } from "@/lib/utils";
+import { cn, getIrysUrl } from "@/lib/utils";
 import type { UploadProgress as UploadProgressType } from "@/types";
 
 interface UploadProgressProps {
@@ -186,7 +186,7 @@ export function UploadProgress({ progress, onReset }: UploadProgressProps) {
               >
                 <span className="text-[10px] font-mono text-white/30 tracking-wider">TX</span>
                 <a
-                  href={getArweaveUrl(progress.txId)}
+                  href={getIrysUrl(progress.txId)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-[#d4622a] hover:text-white transition-colors font-mono text-sm group"

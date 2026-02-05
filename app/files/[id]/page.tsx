@@ -10,6 +10,7 @@ import {
   formatBytes,
   formatDateTime,
   getArweaveUrl,
+  getIrysUrl,
   truncateAddress,
 } from "@/lib/utils";
 import {
@@ -214,16 +215,16 @@ export default function FileDetailPage() {
             </div>
           </motion.div>
 
-          {/* Arweave Transaction */}
+          {/* Storage Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="border border-white/5 p-6 lg:p-8"
           >
-            <h2 className="text-base font-serif text-white mb-1">Arweave Transaction</h2>
+            <h2 className="text-base font-serif text-white mb-1">Permanent Storage</h2>
             <p className="text-[11px] text-white/30 mb-6 font-mono tracking-wider">
-              PERMANENTLY STORED ON ARWEAVE
+              STORED ON ARWEAVE VIA IRYS
             </p>
 
             <div className="flex items-center gap-2 mb-6">
@@ -244,25 +245,36 @@ export default function FileDetailPage() {
               </button>
             </div>
 
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <a
+                href={getIrysUrl(file.arweaveId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 border border-[#d4622a]/30 bg-[#d4622a]/5 text-[#d4622a] hover:bg-[#d4622a]/10 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Irys Gateway
+                <span className="text-[9px] font-mono opacity-60">(FAST)</span>
+              </a>
               <a
                 href={getArweaveUrl(file.arweaveId)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+                className="py-3 border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
               >
                 <ExternalLink className="h-4 w-4" />
-                View on Arweave
-              </a>
-              <a
-                href={getArweaveUrl(file.arweaveId)}
-                download={file.name}
-                className="flex-1 py-3 bg-white text-[#0a0a0a] hover:bg-[#d4622a] hover:text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium"
-              >
-                <Download className="h-4 w-4" />
-                Download
+                Arweave
               </a>
             </div>
+
+            <a
+              href={getIrysUrl(file.arweaveId)}
+              download={file.name}
+              className="w-full py-3 bg-white text-[#0a0a0a] hover:bg-[#d4622a] hover:text-white transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </a>
           </motion.div>
 
           {/* Encryption Key (if encrypted) */}

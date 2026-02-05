@@ -57,6 +57,10 @@ export function getArweaveUrl(txId: string): string {
   return `https://arweave.net/${txId}`;
 }
 
+export function getIrysUrl(txId: string): string {
+  return `https://gateway.irys.xyz/${txId}`;
+}
+
 export function getFileExtension(filename: string): string {
   return filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
 }

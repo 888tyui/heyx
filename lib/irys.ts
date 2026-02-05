@@ -82,6 +82,10 @@ export function getArweaveUrl(txId: string): string {
   return `https://arweave.net/${txId}`;
 }
 
+export function getIrysUrl(txId: string): string {
+  return `https://gateway.irys.xyz/${txId}`;
+}
+
 export function resetIrysInstance(): void {
   irysInstance = null;
 }
