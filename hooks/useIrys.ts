@@ -127,10 +127,11 @@ export function useIrys(): UseIrysReturn {
     return info.addresses.solana;
   }, []);
 
-  // Direct SOL transfer to Irys bundler (avoids Phantom warnings)
+  // Direct SOL transfer to Irys bundler - DEBUG VERSION
+  // Split into separate steps to identify where Phantom warning occurs
   const fundWithDirectTransfer = useCallback(
     async (amount: number): Promise<string | null> => {
-      if (!publicKey || !signTransaction || !connection) {
+      if (!publicKey || !signTransaction || !signMessage || !connection) {
         setError("Wallet not connected");
         return null;
       }
@@ -145,15 +146,30 @@ export function useIrys(): UseIrysReturn {
       setError(null);
 
       try {
-        // Get Irys bundler address
-        const bundlerAddress = await getBundlerAddress(client);
-        console.log("Irys bundler address:", bundlerAddress);
+        // ========== STEP 1: Message Signature (DEBUG) ==========
+        console.log("🔵 STEP 1: Requesting message signature...");
+        const messageToSign = `Helix Debug: Authorize funding ${amount} SOL to Irys\nTimestamp: ${Date.now()}`;
 
-        // Create a simple SOL transfer transaction with memo
+        try {
+          const encodedMessage = new TextEncoder().encode(messageToSign);
+          const signature = await signMessage(encodedMessage);
+          console.log("✅ STEP 1 PASSED: Message signed successfully", signature);
+        } catch (err) {
+          console.error("❌ STEP 1 FAILED: Message signature rejected", err);
+          throw new Error("Message signature rejected by user");
+        }
+
+        // ========== STEP 2: Get Irys Bundler Address ==========
+        console.log("🔵 STEP 2: Getting Irys bundler address...");
+        const bundlerAddress = await getBundlerAddress(client);
+        console.log("✅ STEP 2 PASSED: Bundler address:", bundlerAddress);
+
+        // ========== STEP 3: Build Transaction ==========
+        console.log("🔵 STEP 3: Building transaction...");
         const lamports = Math.ceil(amount * LAMPORTS_PER_SOL);
         const transaction = new Transaction();
 
-        // Add memo to help Phantom understand the transaction purpose
+        // Add memo
         transaction.add(
           new TransactionInstruction({
             keys: [],
@@ -162,7 +178,7 @@ export function useIrys(): UseIrysReturn {
           })
         );
 
-        // Add the SOL transfer
+        // Add SOL transfer
         transaction.add(
           SystemProgram.transfer({
             fromPubkey: publicKey,
@@ -175,43 +191,61 @@ export function useIrys(): UseIrysReturn {
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = publicKey;
+        console.log("✅ STEP 3 PASSED: Transaction built", {
+          lamports,
+          to: bundlerAddress,
+          blockhash,
+        });
 
-        // Sign the transaction (Phantom will show a normal SOL transfer)
-        const signedTx = await signTransaction(transaction);
+        // ========== STEP 4: Sign Transaction ==========
+        console.log("🔵 STEP 4: Requesting transaction signature...");
+        console.log("⚠️ CHECK PHANTOM NOW - Does warning appear here?");
 
-        // Send the signed transaction
+        let signedTx;
+        try {
+          signedTx = await signTransaction(transaction);
+          console.log("✅ STEP 4 PASSED: Transaction signed");
+        } catch (err) {
+          console.error("❌ STEP 4 FAILED: Transaction signature rejected", err);
+          throw new Error("Transaction signature rejected by user");
+        }
+
+        // ========== STEP 5: Send Transaction ==========
+        console.log("🔵 STEP 5: Sending signed transaction...");
         const txId = await connection.sendRawTransaction(signedTx.serialize(), {
           skipPreflight: false,
           preflightCommitment: "confirmed",
         });
+        console.log("✅ STEP 5 PASSED: Transaction sent, txId:", txId);
 
-        // Wait for confirmation
+        // ========== STEP 6: Confirm Transaction ==========
+        console.log("🔵 STEP 6: Waiting for confirmation...");
         await connection.confirmTransaction({
           blockhash,
           lastValidBlockHeight,
           signature: txId,
         }, "confirmed");
+        console.log("✅ STEP 6 PASSED: Transaction confirmed");
 
-        console.log("Fund transaction confirmed:", txId);
-
-        // Wait a bit for Irys to recognize the deposit
+        // Wait for Irys to recognize the deposit
         await new Promise(resolve => setTimeout(resolve, 3000));
 
         // Refresh balance
         const bal = await getIrysBalance(client);
         setBalance(bal);
 
+        console.log("🎉 ALL STEPS COMPLETED SUCCESSFULLY");
         return txId;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to fund Irys";
         setError(message);
-        console.error("Direct fund error:", err);
+        console.error("❌ Fund error:", err);
         return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [irys, publicKey, signTransaction, connection, connect, getBundlerAddress]
+    [irys, publicKey, signTransaction, signMessage, connection, connect, getBundlerAddress]
   );
 
   const fund = useCallback(
